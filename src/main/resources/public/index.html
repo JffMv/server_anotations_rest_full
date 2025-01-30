@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Example</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #444;
+            margin-bottom: 20px;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .response-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: inline-block;
+            width: 80%;
+            max-width: 600px;
+            text-align: left;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Form with GET</h1>
+    <form>
+        <button type="button" onclick="loadGetMsg('html')">GET HTML</button>
+        <button type="button" onclick="loadGetMsg('css')">GET CSS</button>
+        <button type="button" onclick="loadGetMsg('js')">GET JS</button>
+        <button type="button" onclick="loadGetMsg('imagen')">GET Image</button>
+    </form>
+    <div id="getrespmsg" class="response-box hidden"></div>
+    <img id="getImage" class="hidden" />
+
+    <h1>Form with POST</h1>
+    <form>
+        <button type="button" onclick="loadPostMsg('html')">POST HTML</button>
+        <button type="button" onclick="loadPostMsg('css')">POST CSS</button>
+        <button type="button" onclick="loadPostMsg('js')">POST JS</button>
+        <button type="button" onclick="loadPostMsg('imagen')">POST Image</button>
+    </form>
+    <div id="postrespmsg" class="response-box hidden"></div>
+    <img id="postImage" class="hidden" />
+</div>
+
+<script>
+    function clearContent() {
+        document.getElementById("getrespmsg").classList.add('hidden');
+        document.getElementById("getrespmsg").innerHTML = '';
+        document.getElementById("postrespmsg").classList.add('hidden');
+        document.getElementById("postrespmsg").innerHTML = '';
+        document.getElementById("getImage").classList.add('hidden');
+        document.getElementById("getImage").src = '';
+        document.getElementById("postImage").classList.add('hidden');
+        document.getElementById("postImage").src = '';
+    }
+
+    function loadGetMsg(type) {
+        clearContent();
+        fetch(`/${type}`)
+            .then(response => type === 'imagen' ? response.blob() : response.text())
+            .then(data => {
+                if (type === 'imagen') {
+                    let imgUrl = URL.createObjectURL(data);
+                    document.getElementById("getImage").src = imgUrl;
+                    document.getElementById("getImage").classList.remove('hidden');
+                } else {
+                    document.getElementById("getrespmsg").innerHTML = data;
+                    document.getElementById("getrespmsg").classList.remove('hidden');
+                }
+            });
+    }
+
+    function loadPostMsg(type) {
+        clearContent();
+        fetch(`/${type}`, { method: 'POST' })
+            .then(response => type === 'imagen' ? response.blob() : response.text())
+            .then(data => {
+                if (type === 'imagen') {
+                    let imgUrl = URL.createObjectURL(data);
+                    document.getElementById("postImage").src = imgUrl;
+                    document.getElementById("postImage").classList.remove('hidden');
+                } else {
+                    document.getElementById("postrespmsg").innerHTML = data;
+                    document.getElementById("postrespmsg").classList.remove('hidden');
+                }
+            });
+    }
+</script>
+</body>
+</html>
