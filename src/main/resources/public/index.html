@@ -80,11 +80,17 @@
 <div class="container">
     <h1>Form with GET</h1>
     <form>
-        <button type="button" onclick="loadGetMsg('html')">GET HTML</button>
-        <button type="button" onclick="loadGetMsg('css')">GET CSS</button>
-        <button type="button" onclick="loadGetMsg('js')">GET JS</button>
-        <button type="button" onclick="loadGetMsg('imagen')">GET Image</button>
+        <button type="button" onclick="loadGetMsg('proof.html')">GET HTML</button>
+        <button type="button" onclick="loadGetMsg('proof.css')">GET CSS</button>
+        <button type="button" onclick="loadGetMsg('proof.js')">GET JS</button>
+        <button type="button" onclick="loadGetMsg('proof.png')">GET Image</button>
+        <button type="button" onclick="loadGetMsgApp('pi')">GET π</button>
+        <button type="button" onclick="loadGetMsgApp('e')">GET e</button>
     </form>
+    <div>
+        <input type="text" id="nameInput" placeholder="Enter name">
+        <button type="button" onclick="loadGetHello()">GET Hello</button>
+    </div>
     <div id="getrespmsg" class="response-box hidden"></div>
     <img id="getImage" class="hidden" />
 
@@ -110,13 +116,28 @@
         document.getElementById("postImage").classList.add('hidden');
         document.getElementById("postImage").src = '';
     }
+    function loadGetMsgApp(type) {
+        clearContent();
+        fetch(`/app/${type}`)
+            .then(response => type === 'proof.png' ? response.blob() : response.text())
+            .then(data => {
+                if (type === 'proof.png') {
+                    let imgUrl = URL.createObjectURL(data);
+                    document.getElementById("getImage").src = imgUrl;
+                    document.getElementById("getImage").classList.remove('hidden');
+                } else {
+                    document.getElementById("getrespmsg").innerHTML = data;
+                    document.getElementById("getrespmsg").classList.remove('hidden');
+                }
+            });
+    }
 
     function loadGetMsg(type) {
         clearContent();
-        fetch(`/${type}`)
-            .then(response => type === 'imagen' ? response.blob() : response.text())
+        fetch(`/webroot/${type}`)
+            .then(response => type === 'proof.png' ? response.blob() : response.text())
             .then(data => {
-                if (type === 'imagen') {
+                if (type === 'proof.png') {
                     let imgUrl = URL.createObjectURL(data);
                     document.getElementById("getImage").src = imgUrl;
                     document.getElementById("getImage").classList.remove('hidden');
@@ -129,10 +150,10 @@
 
     function loadPostMsg(type) {
         clearContent();
-        fetch(`/${type}`, { method: 'POST' })
-            .then(response => type === 'imagen' ? response.blob() : response.text())
+        fetch(`/app/${type}`, { method: 'POST' })
+            .then(response => type === 'proof.png' ? response.blob() : response.text())
             .then(data => {
-                if (type === 'imagen') {
+                if (type === 'proof.png') {
                     let imgUrl = URL.createObjectURL(data);
                     document.getElementById("postImage").src = imgUrl;
                     document.getElementById("postImage").classList.remove('hidden');
@@ -140,6 +161,16 @@
                     document.getElementById("postrespmsg").innerHTML = data;
                     document.getElementById("postrespmsg").classList.remove('hidden');
                 }
+            });
+    }
+    function loadGetHello() {
+        clearContent();
+        let name = document.getElementById("nameInput").value;
+        fetch(`/app/hello?name=${encodeURIComponent(name)}`)
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("getrespmsg").innerHTML = data;
+                document.getElementById("getrespmsg").classList.remove('hidden');
             });
     }
 </script>
