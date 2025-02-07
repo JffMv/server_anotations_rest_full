@@ -51,10 +51,11 @@ if you want run of test use this command:
 mvn test
 ```
 Test of server and API´s work
-![img.png](pictures_of_readme/img.png)
+![img_4.png](pictures_of_readme/img.png)
+
 
 ## How it see
-![img_2.png](pictures_of_readme/img_2.png)
+![img_3.png](pictures_of_readme/img_2.png)
 
 ## Built With
 

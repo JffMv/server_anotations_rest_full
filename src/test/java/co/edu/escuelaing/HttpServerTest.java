@@ -1,97 +1,72 @@
 package co.edu.escuelaing;
 
-import org.junit.jupiter.api.*;
-import java.io.*;
-import java.net.*;
-import java.nio.file.*;
+import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class HttpServerTest {
 
-    private static final int PORT = 8080;
-    private static Thread serverThread;
-/*
-    // Iniciar el servidor en un hilo separado antes de cada prueba
-    @BeforeAll
-    static void startServer() {
-        serverThread = new Thread(() -> {
-            String[] args = {};  // Los args pueden ser vacíos
-            HttpServer.start(args);
-        });
-        serverThread.start();
-
-        // Esperamos un poco para asegurarnos de que el servidor esté en funcionamiento
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Detener el servidor después de cada prueba
-    @AfterAll
-    static void stopServer() {
-        // Lógica para detener el servidor si fuera necesario, aunque en este caso solo cerramos el hilo
-        serverThread.interrupt();
-    }
-
-    // Prueba para el endpoint /
     @Test
-    void testRootEndpoint() throws IOException {
-        // Realizamos una solicitud GET al endpoint "/"
-        HttpURLConnection connection = (HttpURLConnection) new URL("http://localhost:" + PORT + "/").openConnection();
-        connection.setRequestMethod("GET");
-        int responseCode = connection.getResponseCode();
-
-        // Verificamos que la respuesta sea 200 OK
-        assertEquals(200, responseCode, "La respuesta del servidor no es 200 OK");
+    public void testGetQueryParam() {
+        String request = "GET /app/hello?name=Juan HTTP/1.1";
+        String name = HttpServer.getQueryParam(request, "name");
+        assertEquals("Juan HTTP/1.1", name);
     }
 
-    // Prueba para el endpoint /imagen
     @Test
-    void testImagenEndpoint() throws IOException {
-        // Realizamos una solicitud GET al endpoint "/imagen"
-        HttpURLConnection connection = (HttpURLConnection) new URL("http://localhost:" + PORT + "/imagen").openConnection();
-        connection.setRequestMethod("GET");
-        int responseCode = connection.getResponseCode();
-
-        // Verificamos que la respuesta sea 200 OK
-        assertEquals(200, responseCode, "La respuesta del servidor no es 200 OK");
+    public void testGetQueryParamNoParam() {
+        String request = "GET /app/hello HTTP/1.1";
+        String name = HttpServer.getQueryParam(request, "name");
+        assertEquals("Guest", name);
     }
 
-    // Prueba para el endpoint /html
     @Test
-    void testHtmlEndpoint() throws IOException {
-        // Realizamos una solicitud GET al endpoint "/html"
-        HttpURLConnection connection = (HttpURLConnection) new URL("http://localhost:" + PORT + "/html").openConnection();
-        connection.setRequestMethod("GET");
-        int responseCode = connection.getResponseCode();
-
-        // Verificamos que la respuesta sea 200 OK
-        assertEquals(200, responseCode, "La respuesta del servidor no es 200 OK");
+    public void testGetQueryParamMultipleParams() {
+        String request = "GET /app/hello?name=Juan&age=30 HTTP/1.1";
+        String name = HttpServer.getQueryParam(request, "name");
+        assertEquals("Juan", name);
     }
 
-    // Prueba para el endpoint /css
     @Test
-    void testCssEndpoint() throws IOException {
-        // Realizamos una solicitud GET al endpoint "/css"
-        HttpURLConnection connection = (HttpURLConnection) new URL("http://localhost:" + PORT + "/css").openConnection();
-        connection.setRequestMethod("GET");
-        int responseCode = connection.getResponseCode();
-
-        // Verificamos que la respuesta sea 200 OK
-        assertEquals(200, responseCode, "La respuesta del servidor no es 200 OK");
+    public void testGetPathBeforeQuery() {
+        String url = "/app/hello?name=Juan";
+        String path = HttpServer.getPathBeforeQuery(url);
+        assertEquals("/app/hello", path);
     }
 
-    // Prueba para el endpoint /js
     @Test
-    void testJsEndpoint() throws IOException {
-        // Realizamos una solicitud GET al endpoint "/js"
-        HttpURLConnection connection = (HttpURLConnection) new URL("http://localhost:" + PORT + "/js").openConnection();
-        connection.setRequestMethod("GET");
-        int responseCode = connection.getResponseCode();
+    public void testGetPathBeforeQueryNoQuery() {
+        String url = "/app/hello";
+        String path = HttpServer.getPathBeforeQuery(url);
+        assertEquals("/app/hello", path);
+    }
 
-        // Verificamos que la respuesta sea 200 OK
-        assertEquals(200, responseCode, "La respuesta del servidor no es 200 OK");
-    }*/
+    @Test
+    public void testGetContentType() {
+        String contentType = HttpServer.getContentType("index.html");
+        assertEquals("text/html", contentType);
+
+        contentType = HttpServer.getContentType("styles.css");
+        assertEquals("text/css", contentType);
+
+        contentType = HttpServer.getContentType("script.js");
+        assertEquals("application/javascript", contentType);
+
+        contentType = HttpServer.getContentType("image.png");
+        assertEquals("image/png", contentType);
+
+        contentType = HttpServer.getContentType("photo.jpg");
+        assertEquals("image/jpeg", contentType);
+
+        contentType = HttpServer.getContentType("photo.jpeg");
+        assertEquals("image/jpeg", contentType);
+
+        contentType = HttpServer.getContentType("animation.gif");
+        assertEquals("image/gif", contentType);
+
+        contentType = HttpServer.getContentType("file.txt");
+        assertEquals("text/plain", contentType);
+
+        contentType = HttpServer.getContentType("unknown.xyz");
+        assertEquals("application/octet-stream", contentType);
+    }
 }

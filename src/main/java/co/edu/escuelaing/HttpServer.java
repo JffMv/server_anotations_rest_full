@@ -140,7 +140,7 @@ public class HttpServer {
     }
 
 
-    private static String getContentType(String fileName) {
+    static String getContentType(String fileName) {
         Map<String, String> contentTypes = new HashMap<>();
         contentTypes.put("html", "text/html");
         contentTypes.put("css", "text/css");
