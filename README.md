@@ -72,3 +72,6 @@ Test of server and API´s work
 ## License
 
 This project is licensed under the MIT License - see the [LICENCE.md](LICENCE) file for details
+
+
+java -cp "target/classes" co.edu.escuelaing.WebApplication controllers.GreetingController

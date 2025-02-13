@@ -1,46 +1,55 @@
 package co.edu.escuelaing;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.*;
 import java.nio.file.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
+
+import anotations.GetMapping;
+import anotations.RestController;
 import spark.Request;
 import spark.Response;
 
 public class HttpServer {
     private static final int PORT = 8080;
     private static final String RESOURCES_DIR = "target/classes"; // Carpeta dentro de resources
-    private static Map<String, BiFunction<String, String, String>> servicios= new HashMap();
+    public static Map<String, Method> services = new HashMap<>();
     private static String routePath = "";
 
     public static void start(String[] args) {
+        if (args.length == 0) {
+            System.out.println("Debe proporcionar el nombre de la clase controladora.");
+            return;
+        }
+
+        loadComponents(args); // Cargar los métodos antes de iniciar el servidor
+
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("Servidor HTTP en ejecución en el puerto " + PORT);
-
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                new Thread(() -> handleRequest(clientSocket)).start(); // Manejo de múltiples clientes
+                new Thread(() -> handleRequest(clientSocket)).start();
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    public static void get(String route, BiFunction<String, String, String> f){
+    /**public static void get(String route, BiFunction<String, String, String> f){
         servicios.put(route, f);
     }
+
     public static void staticfiles(String path) throws IOException {
         HttpServer.routePath=path;
     }
 
-
     public static void staticfiles(String path, OutputStream out) throws IOException {
         handleStaticFileRequest(out ,path);
-
-    }
-
+    }**/
 
     private static void handleRequest(Socket clientSocket) {
         try (
@@ -51,42 +60,37 @@ public class HttpServer {
             String requestLine = in.readLine();
             if (requestLine == null) return;
 
+
             System.out.println("Solicitud: " + requestLine);
             String[] parts = requestLine.split(" ");
             if (parts.length < 2 || !parts[0].equals("GET")) {
-
                 //if (!parts[0].equals("POST")) {
                 sendResponse(out, "400 Bad Request", "text/plain", "Bad Request".getBytes());
                 return;//}
             }
 
-            // Verificar si el endpoint es /conection
             String requestedEndpoint = parts[1];
 
             if (requestedEndpoint.equals("/")) {
                 handleStaticFileRequest(out, "src/main/resources/public/index.html");
-            } /*else if (requestedEndpoint.equals("/imagen")) {
-                handleStaticFileRequest(out, "proof.png");
-            } else if (requestedEndpoint.equals("/html")) {
-                handleStaticFileRequest(out, "proof.html");
-            } else if (requestedEndpoint.equals("/css")) {
-                handleStaticFileRequest(out, "proof.css");
-            } else if (requestedEndpoint.equals("/js")) {
-                handleStaticFileRequest(out, "proof.js");
+            } /**else if (requestedEndpoint.equals("/app")) {
+                handleStaticFileRequest(out, "webroot/proof.js");
+            }**/
+            else {
+                //staticfiles(requestedEndpoint, out );
+                System.out.println(services.keySet()+" son keys");
+                Method s = services.get(requestedEndpoint);
+                if (s == null) {
+                    sendResponse(out, "404 Not Found Method is null", "text/plain", "Service Not Found".getBytes());
+                    return;
+                }
+                String ss = (String) s.invoke(null, "");
+                System.out.println(ss + " aca estoyy");
 
-            }*/ else if (requestedEndpoint.equals("/app")) {
-                handleStaticFileRequest(out, "proof.app");
-
-            } else {
-                staticfiles(requestedEndpoint, out );
             }
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            try {
-                clientSocket.close();
-            } catch (IOException ignored) {}
         }
     }
 
@@ -100,27 +104,24 @@ public class HttpServer {
                 sendResponse(out, "404 Not Found", "text/plain", "File or Service Not Found".getBytes());
                 return;
             }
-
         }
-        
+
         if (resourcePath.contains("/"+ routePath) || requestedFile.contains("src/main/resources/public/index.html")){
 
             // Leer el contenido del archivo
             byte[] fileContent = Files.readAllBytes(file.toPath());
-
             // Obtener el tipo de contenido
             String contentType = getContentType(requestedFile);
-
             // Enviar respuesta con el contenido del archivo
             sendResponse(out, "200 OK", contentType, fileContent);
         } else {
-            System.out.println(requestedFile + " es la respuesta" + servicios.keySet());
+            System.out.println(requestedFile + " es la respuesta" + services.keySet());
             String key ="";
             if(requestedFile.contains("/app/hello?")){
                 key = getPathBeforeQuery(requestedFile);
             }
             key = key.equals("") ? requestedFile : key;
-            String  response = (servicios.get(key)).apply(requestedFile,"");
+            String  response = "";//(services.get(key));
             System.out.println(response + " es la respuesta");
             String contentType = getContentType("txt");
             byte[] fileContent = response.getBytes();
@@ -175,4 +176,58 @@ public class HttpServer {
         int index = url.indexOf("?");
         return (index != -1) ? url.substring(0, index) : url;
     }
+
+    /**public static void loadComponents(String []args){
+        try{
+            Class c = Class.forName(args[0]);
+            System.out.println("buenas "+ args[0]);
+            if(!c.isAnnotationPresent(RestController.class)) {// preguntarles si no está con restcontroller
+                System.exit(0); // toca cargarla del disco y esto es para cuando no está presente
+            }
+
+            for (Method m : c.getDeclaredMethods()){
+                System.out.println("esta es la declaración de metodos "+m);
+                if(m.isAnnotationPresent(GetMapping.class)){ // ¿la anotación está presente?
+                    System.out.println("veces");
+                    GetMapping a = m.getAnnotation(GetMapping.class);
+                    services.put(a.value(),m); // necesito sacar la anotation
+                }
+            }
+
+        }catch ( Exception e
+        ) {
+
+        }
+
+    }**/
+
+
+    public static void loadComponents(String[] args) {
+        if (args.length == 0) {
+            System.out.println("Debe proporcionar el nombre de la clase controladora.");
+            return;
+        }
+        try {
+            Class<?> c = Class.forName(args[0]);
+            System.out.println("Cargando clase: " + args[0]);
+
+            if (!c.isAnnotationPresent(RestController.class)) {
+                System.out.println("La clase no tiene la anotación @RestController.");
+                return;
+            }
+
+            for (Method m : c.getDeclaredMethods()) {
+                if (m.isAnnotationPresent(GetMapping.class)) {
+                    GetMapping annotation = m.getAnnotation(GetMapping.class);
+                    services.put(annotation.value(), m);
+                    System.out.println("Método registrado: " + annotation.value());
+                }
+            }
+        } catch (ClassNotFoundException e) {
+            System.out.println("No se encontró la clase: " + args[0]);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }
