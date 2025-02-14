@@ -7,8 +7,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.PARAMETER)  //ANOTAR SOLO CLASES
+@Target(ElementType.PARAMETER)
 public @interface RequestParam {
     String value();
-    String defaultValue();
+    String defaultValue() default "";  // Permite valores por defecto
 }

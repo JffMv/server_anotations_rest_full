@@ -10,7 +10,9 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
+import anotations.GetFile;
 import anotations.GetMapping;
+import anotations.RequestParam;
 import anotations.RestController;
 import spark.Request;
 import spark.Response;
@@ -39,17 +41,6 @@ public class HttpServer {
             e.printStackTrace();
         }
     }
-    /**public static void get(String route, BiFunction<String, String, String> f){
-        servicios.put(route, f);
-    }
-
-    public static void staticfiles(String path) throws IOException {
-        HttpServer.routePath=path;
-    }
-
-    public static void staticfiles(String path, OutputStream out) throws IOException {
-        handleStaticFileRequest(out ,path);
-    }**/
 
     private static void handleRequest(Socket clientSocket) {
         try (
@@ -73,19 +64,48 @@ public class HttpServer {
 
             if (requestedEndpoint.equals("/")) {
                 handleStaticFileRequest(out, "src/main/resources/public/index.html");
-            } /**else if (requestedEndpoint.equals("/app")) {
-                handleStaticFileRequest(out, "webroot/proof.js");
-            }**/
-            else {
-                //staticfiles(requestedEndpoint, out );
-                System.out.println(services.keySet()+" son keys");
-                Method s = services.get(requestedEndpoint);
-                if (s == null) {
+            }
+            else if (requestedEndpoint.contains("file")) {
+
+
+                String nameParam = HttpServer.getQueryParam(requestedEndpoint, "file");
+                Method method = services.get(HttpServer.getPathBeforeQuery(requestedEndpoint));
+
+                if (method == null) {
                     sendResponse(out, "404 Not Found Method is null", "text/plain", "Service Not Found".getBytes());
                     return;
                 }
-                String ss = (String) s.invoke(null, "");
-                System.out.println(ss + " aca estoyy");
+
+                // Obtener el valor por defecto del parámetro si es necesario
+                RequestParam paramAnnotation = method.getParameters()[0].getAnnotation(RequestParam.class);
+                String defaultValue = (paramAnnotation != null) ? paramAnnotation.defaultValue() : "";
+                String finalValue = nameParam.equals("Guest") ? defaultValue : nameParam;
+
+                System.out.println(finalValue + " final valueeeee");
+                System.out.println(finalValue);
+
+                method.invoke(null, finalValue, out);
+
+
+            } else
+            {
+                String nameParam = HttpServer.getQueryParam(requestedEndpoint, "name");
+                Method method = services.get(HttpServer.getPathBeforeQuery(requestedEndpoint));
+
+                if (method == null) {
+                    sendResponse(out, "404 Not Found Method is null", "text/plain", "Service Not Found".getBytes());
+                    return;
+                }
+
+                // Obtener el valor por defecto del parámetro si es necesario
+                RequestParam paramAnnotation = method.getParameters()[0].getAnnotation(RequestParam.class);
+                String defaultValue = (paramAnnotation != null) ? paramAnnotation.defaultValue() : "";
+                String finalValue = nameParam.equals("Guest") ? defaultValue : nameParam;
+
+                System.out.println(finalValue + " final valueeeee");
+                System.out.println(finalValue);
+                method.invoke(null, finalValue, out);
+
 
             }
 
@@ -94,7 +114,13 @@ public class HttpServer {
         }
     }
 
-    private static void handleStaticFileRequest(OutputStream out, String requestedFile) throws IOException {
+    /**
+     *
+     * @param out es la salida del server
+     * @param requestedFile debe traer el nombre del archivo
+     * @throws IOException
+     */
+    public static void handleStaticFileRequest(OutputStream out, String requestedFile) throws IOException {
         // Obtener la ruta del archivo dentro de resources/public
         String resourcePath = (requestedFile.contains("src/main/resources/public/index.html")) ? requestedFile :RESOURCES_DIR + "/" + requestedFile;
         File file = new File(resourcePath);
@@ -130,7 +156,7 @@ public class HttpServer {
 
     }
 
-    private static void sendResponse(OutputStream out, String status, String contentType, byte[] content) throws IOException {
+    public static void sendResponse(OutputStream out, String status, String contentType, byte[] content) throws IOException {
         PrintWriter headerWriter = new PrintWriter(out, true);
         headerWriter.println("HTTP/1.1 " + status);
         headerWriter.println("Content-Type: " + contentType);
@@ -141,7 +167,7 @@ public class HttpServer {
     }
 
 
-    static String getContentType(String fileName) {
+    public static String getContentType(String fileName) {
         Map<String, String> contentTypes = new HashMap<>();
         contentTypes.put("html", "text/html");
         contentTypes.put("css", "text/css");
@@ -172,34 +198,11 @@ public class HttpServer {
         }
         return "Guest"; // Si el parámetro no existe, retorna "Guest"
     }
+
     public static String getPathBeforeQuery(String url) {
         int index = url.indexOf("?");
         return (index != -1) ? url.substring(0, index) : url;
     }
-
-    /**public static void loadComponents(String []args){
-        try{
-            Class c = Class.forName(args[0]);
-            System.out.println("buenas "+ args[0]);
-            if(!c.isAnnotationPresent(RestController.class)) {// preguntarles si no está con restcontroller
-                System.exit(0); // toca cargarla del disco y esto es para cuando no está presente
-            }
-
-            for (Method m : c.getDeclaredMethods()){
-                System.out.println("esta es la declaración de metodos "+m);
-                if(m.isAnnotationPresent(GetMapping.class)){ // ¿la anotación está presente?
-                    System.out.println("veces");
-                    GetMapping a = m.getAnnotation(GetMapping.class);
-                    services.put(a.value(),m); // necesito sacar la anotation
-                }
-            }
-
-        }catch ( Exception e
-        ) {
-
-        }
-
-    }**/
 
 
     public static void loadComponents(String[] args) {
@@ -217,8 +220,13 @@ public class HttpServer {
             }
 
             for (Method m : c.getDeclaredMethods()) {
-                if (m.isAnnotationPresent(GetMapping.class)) {
+                if (m.isAnnotationPresent(GetMapping.class) ) {
                     GetMapping annotation = m.getAnnotation(GetMapping.class);
+                    services.put(annotation.value(), m);
+                    System.out.println("Método registrado: " + annotation.value());
+                }
+                if(m.isAnnotationPresent(GetFile.class)){
+                    GetFile annotation = m.getAnnotation(GetFile.class);
                     services.put(annotation.value(), m);
                     System.out.println("Método registrado: " + annotation.value());
                 }

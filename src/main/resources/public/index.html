@@ -118,7 +118,7 @@
     }
     function loadGetMsgApp(type) {
         clearContent();
-        fetch(`/app/${type}`)
+        fetch(`/app?file=${type}`)
             .then(response => type === 'proof.png' ? response.blob() : response.text())
             .then(data => {
                 if (type === 'proof.png') {
@@ -134,7 +134,7 @@
 
     function loadGetMsg(type) {
         clearContent();
-        fetch(`/webroot/${type}`)
+        fetch(`/webroot?file=${type}`)
             .then(response => type === 'proof.png' ? response.blob() : response.text())
             .then(data => {
                 if (type === 'proof.png') {
