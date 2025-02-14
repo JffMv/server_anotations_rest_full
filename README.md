@@ -38,7 +38,7 @@ mvn package
 
 
 ## Architecture
-![img_5.png](pictures_of_readme/img_1.png)
+![img_5.png](pictures_of_readme/img_5.png)
 ### HttpServer:
 Is one server that host several services API´s
 
