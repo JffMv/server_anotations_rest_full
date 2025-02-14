@@ -65,31 +65,9 @@ public class HttpServer {
             if (requestedEndpoint.equals("/")) {
                 handleStaticFileRequest(out, "src/main/resources/public/index.html");
             }
-            else if (requestedEndpoint.contains("file")) {
-
-
-                String nameParam = HttpServer.getQueryParam(requestedEndpoint, "file");
-                Method method = services.get(HttpServer.getPathBeforeQuery(requestedEndpoint));
-
-                if (method == null) {
-                    sendResponse(out, "404 Not Found Method is null", "text/plain", "Service Not Found".getBytes());
-                    return;
-                }
-
-                // Obtener el valor por defecto del parámetro si es necesario
-                RequestParam paramAnnotation = method.getParameters()[0].getAnnotation(RequestParam.class);
-                String defaultValue = (paramAnnotation != null) ? paramAnnotation.defaultValue() : "";
-                String finalValue = nameParam.equals("Guest") ? defaultValue : nameParam;
-
-                System.out.println(finalValue + " final valueeeee");
-                System.out.println(finalValue);
-
-                method.invoke(null, finalValue, out);
-
-
-            } else
+            else
             {
-                String nameParam = HttpServer.getQueryParam(requestedEndpoint, "name");
+                String nameParam = (requestedEndpoint.contains("file")) ? HttpServer.getQueryParam(requestedEndpoint, "file") : HttpServer.getQueryParam(requestedEndpoint, "name");
                 Method method = services.get(HttpServer.getPathBeforeQuery(requestedEndpoint));
 
                 if (method == null) {
@@ -102,11 +80,7 @@ public class HttpServer {
                 String defaultValue = (paramAnnotation != null) ? paramAnnotation.defaultValue() : "";
                 String finalValue = nameParam.equals("Guest") ? defaultValue : nameParam;
 
-                System.out.println(finalValue + " final valueeeee");
-                System.out.println(finalValue);
                 method.invoke(null, finalValue, out);
-
-
             }
 
         } catch (Exception e) {
@@ -179,7 +153,7 @@ public class HttpServer {
         contentTypes.put("txt", "text/plain");
 
         String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
-        System.out.println(extension + " esta es la extension");
+        //System.out.println(extension + " esta es la extension");
         return contentTypes.getOrDefault(extension, "application/octet-stream");
     }
 

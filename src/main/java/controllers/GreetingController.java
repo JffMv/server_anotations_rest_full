@@ -6,6 +6,7 @@ import java.net.http.HttpClient;
 import java.util.concurrent.atomic.AtomicLong;
 import anotations.*;
 import co.edu.escuelaing.HttpServer;
+import jdk.dynalink.beans.StaticClass;
 
 @RestController
 public class GreetingController {
@@ -15,16 +16,14 @@ public class GreetingController {
 
     @GetMapping("/app/hello")
     public static  String greeting(@RequestParam(value = "name", defaultValue = "World") String name, OutputStream out) throws IOException {
-        String contentType = HttpServer.getContentType("txt");
-        HttpServer.sendResponse(out, "200", contentType, name.getBytes());
-        return "OK";
+        return GreetingController.sent(name,out);
     }
+
+
     @GetMapping("/app")
     public static String numbers(String name, OutputStream out) throws IOException {
         String variable = name.equals("pi")? Double.toString(Math.PI): Double.toString(Math.E);
-        String contentType = HttpServer.getContentType("txt");
-        HttpServer.sendResponse(out, "200", contentType, variable.getBytes());
-        return "OK";
+        return GreetingController.sent(variable,out);
     }
 
 
@@ -39,5 +38,11 @@ public class GreetingController {
             return "error";
         }
 
+    }
+
+    private static String sent(String variable, OutputStream out) throws IOException {
+        String contentType = HttpServer.getContentType("txt");
+        HttpServer.sendResponse(out, "200", contentType, variable.getBytes());
+        return "OK";
     }
 }
