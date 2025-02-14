@@ -1,13 +1,12 @@
 # Server Reader Anything
 
-Use API´s for bring files with extentions .png .html .css .js save in the local disk.
-
+Use API´s Rest Full with annotations without Framework in other words. This project use reflect of JAVA.
 
 ## Getting Started
 
 For clone this repository you use this command:
  ```
- git clone https://github.com/JffMv/Server_reader.git
+ git clone https://github.com/JffMv/server_anotations_rest_full.git
  ```
 ### Prerequisites
 
@@ -39,7 +38,7 @@ mvn package
 
 
 ## Architecture
-![img_1.png](pictures_of_readme/img_1.png)
+![img_5.png](pictures_of_readme/img_1.png)
 ### HttpServer:
 Is one server that host several services API´s
 
