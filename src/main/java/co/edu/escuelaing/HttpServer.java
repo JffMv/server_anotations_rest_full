@@ -18,10 +18,17 @@ import spark.Request;
 import spark.Response;
 
 public class HttpServer {
-    private static final int PORT = 8080;
-    private static final String RESOURCES_DIR = "target/classes"; // Carpeta dentro de resources
+    private static final int PORT = Integer.parseInt(System.getenv("PORT") != null ? System.getenv("PORT") : "8080");
+    private static boolean onDocker = true;
+    private static String routeComplementaryDocker = "/usrapp/bin/";
+
+
+
+    private static final String RESOURCES_DIR = onDocker? routeComplementaryDocker + "classes":"target/classes" ; // Carpeta dentro de resources
     public static Map<String, Method> services = new HashMap<>();
     private static String routePath = "";
+
+    private static String routeIndex= onDocker? routeComplementaryDocker + "classes/resources/public/index.html":"classes/resources/public/index.html";
 
     public static void start(String[] args) {
         if (args.length == 0) {
@@ -63,7 +70,7 @@ public class HttpServer {
             String requestedEndpoint = parts[1];
 
             if (requestedEndpoint.equals("/")) {
-                handleStaticFileRequest(out, "src/main/resources/public/index.html");
+                handleStaticFileRequest(out, routeIndex);
             }
             else
             {
@@ -96,17 +103,17 @@ public class HttpServer {
      */
     public static void handleStaticFileRequest(OutputStream out, String requestedFile) throws IOException {
         // Obtener la ruta del archivo dentro de resources/public
-        String resourcePath = (requestedFile.contains("src/main/resources/public/index.html")) ? requestedFile :RESOURCES_DIR + "/" + requestedFile;
+        String resourcePath = (requestedFile.contains(routeIndex)) ? requestedFile :RESOURCES_DIR + "/" + requestedFile;
         File file = new File(resourcePath);
 
         if (!file.exists() && !resourcePath.contains("/"+routePath)) {
-            if(!resourcePath.contains("/app") && !requestedFile.contains("src/main/resources/public/index.html")){
+            if(!resourcePath.contains("/app") && !requestedFile.contains(routeIndex)){
                 sendResponse(out, "404 Not Found", "text/plain", "File or Service Not Found".getBytes());
                 return;
             }
         }
 
-        if (resourcePath.contains("/"+ routePath) || requestedFile.contains("src/main/resources/public/index.html")){
+        if (resourcePath.contains("/"+ routePath) || requestedFile.contains(routeIndex)){
 
             // Leer el contenido del archivo
             byte[] fileContent = Files.readAllBytes(file.toPath());
